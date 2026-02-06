@@ -15,7 +15,10 @@ export const useAuthStore = create((set) => ({
             email,
             password,
         });
-        if (error) throw error;
+        if (error) {
+            console.error('Supabase Auth Error:', error.message, error.status);
+            throw error;
+        }
         return data;
     },
 
