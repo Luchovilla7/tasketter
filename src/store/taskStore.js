@@ -53,8 +53,8 @@ export const useTaskStore = create((set, get) => ({
         const tasksToInsert = newTasks.map(t => ({
             user_id: user.id,
             title: t.title,
-            impact: t.impact || Math.floor(Math.random() * 100),
-            effort: t.effort || Math.floor(Math.random() * 100),
+            impact: Math.round(t.impact || Math.random() * 100),
+            effort: Math.round(t.effort || Math.random() * 100),
             urgency: t.urgency || false,
             completed: t.completed || false,
             duration: t.duration || null,
