@@ -16,6 +16,8 @@ import ChaosModal from './components/ChaosModal';
 import SettingsModal from './components/SettingsModal';
 import ImpactMatrix from './components/ImpactMatrix';
 import TaskBoard from './components/TaskBoard';
+import Timeline from './components/Timeline';
+import CalendarView from './components/CalendarView';
 import Analytics from './components/Analytics';
 import LoginPage from './pages/LoginPage';
 import { useTaskStore } from './store/taskStore';
@@ -91,6 +93,8 @@ const App = () => {
         switch (activeTab) {
             case 'matrix': return <ImpactMatrix />;
             case 'tasks': return <TaskBoard />;
+            case 'timeline': return <Timeline />;
+            case 'calendar': return <CalendarView />;
             case 'analytics': return <Analytics />;
             default: return <MockView title={navItems.find(i => i.id === activeTab)?.label} />;
         }
@@ -235,10 +239,10 @@ const App = () => {
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 md:gap-5 mt-1 md:mt-2">
-                                <p className="text-[10px] md:text-xs text-purple-400 font-bold flex items-center gap-1.5 md:gap-2 leading-none">
+                                <div className="text-[10px] md:text-xs text-purple-400 font-bold flex items-center gap-1.5 md:gap-2 leading-none">
                                     <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)] shrink-0" />
                                     {tasks.length} Nodos
-                                </p>
+                                </div>
                                 <div className="w-px h-3 md:h-4 bg-white/10 shrink-0" />
                                 <p className="text-[10px] md:text-xs text-gray-500 font-medium truncate hidden sm:block">
                                     Verificado: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
