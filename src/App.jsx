@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ChaosModal from './components/ChaosModal';
+import SettingsModal from './components/SettingsModal';
 import ImpactMatrix from './components/ImpactMatrix';
 import TaskBoard from './components/TaskBoard';
 import Analytics from './components/Analytics';
@@ -48,6 +49,7 @@ const App = () => {
     const [activeTab, setActiveTab] = useState('matrix');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isChaosModalOpen, setIsChaosModalOpen] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     React.useEffect(() => {
         checkSession();
@@ -99,6 +101,11 @@ const App = () => {
             <ChaosModal
                 isOpen={isChaosModalOpen}
                 onClose={() => setIsChaosModalOpen(false)}
+            />
+
+            <SettingsModal
+                isOpen={isSettingsOpen}
+                onClose={() => setIsSettingsOpen(false)}
             />
 
             {/* Sidebar Overlay for Mobile */}
@@ -185,7 +192,10 @@ const App = () => {
                                     <p className="flex justify-between"><span>Sinc:</span> <span>Activa</span></p>
                                 </div>
                             </div>
-                            <button className="w-full flex items-center gap-4 px-5 md:px-6 py-3 md:py-4 rounded-2xl text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
+                            <button
+                                onClick={() => setIsSettingsOpen(true)}
+                                className="w-full flex items-center gap-4 px-5 md:px-6 py-3 md:py-4 rounded-2xl text-gray-400 hover:text-white hover:bg-white/5 transition-all group"
+                            >
                                 <Settings size={20} md:size={22} className="group-hover:rotate-90 transition-transform duration-700 ease-out" />
                                 <span className="font-bold tracking-tight text-sm md:text-base">Configuración</span>
                             </button>
