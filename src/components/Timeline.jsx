@@ -7,6 +7,13 @@ import { Clock, CheckCircle2, Circle, AlertCircle, Hash, Zap } from 'lucide-reac
 const TimelineTask = ({ task, isFirst, isLast }) => {
     const updateTask = useTaskStore(state => state.updateTask);
 
+    const parseLocalDate = (dateStr) => {
+        if (!dateStr) return null;
+        if (dateStr.includes('T')) return new Date(dateStr);
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    };
+
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -44,7 +51,7 @@ const TimelineTask = ({ task, isFirst, isLast }) => {
                             </span>
                             {task.target_date && (
                                 <span className="flex items-center gap-1 text-[9px] md:text-[11px] text-blue-400 font-black uppercase tracking-tighter">
-                                    <Clock size={10} /> {new Date(task.target_date).toLocaleDateString('es-ES')}
+                                    <Clock size={10} /> {parseLocalDate(task.target_date).toLocaleDateString('es-ES')}
                                 </span>
                             )}
                             {task.client_name && (

@@ -42,13 +42,20 @@ const CalendarView = () => {
             d1.getDate() === d2.getDate();
     };
 
+    const parseLocalDate = (dateStr) => {
+        if (!dateStr) return null;
+        if (dateStr.includes('T')) return new Date(dateStr); // For created_at strings
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return new Date(year, month - 1, day); // Month is 0-indexed in JS
+    };
+
     const getTasksForDay = (day) => {
         const date = new Date(year, month, day);
         const dayOfWeek = date.getDay(); // 0 is Sunday, 1 is Monday...
         const dayOfMonth = date.getDate();
 
         return tasks.filter(task => {
-            const taskDate = task.target_date ? new Date(task.target_date) : new Date(task.created_at);
+            const taskDate = task.target_date ? parseLocalDate(task.target_date) : new Date(task.created_at);
 
             // 1. Direct match (Scheduled for this specific day)
             if (isSameDay(taskDate, date)) return true;
