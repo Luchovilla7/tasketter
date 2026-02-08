@@ -2,10 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTaskStore } from '../store/taskStore';
 import { useShallow } from 'zustand/react/shallow';
-import { Zap, AlertCircle, Clock, Hash, Move } from 'lucide-react';
+import { Zap, AlertCircle, Clock, Hash, Move, Pencil } from 'lucide-react';
 
 const TaskCard = ({ task, zoom, pan, canvasRef }) => {
-    const updateTask = useTaskStore(state => state.updateTask);
+    const { updateTask, setEditingTask } = useTaskStore();
     const cardRef = useRef(null);
 
     const handleDragEnd = (_, info) => {
@@ -59,9 +59,21 @@ const TaskCard = ({ task, zoom, pan, canvasRef }) => {
             <div className={`glass-card p-2 md:p-3 w-32 md:w-48 rounded-xl ring-1 ring-white/10 group cursor-grab active:cursor-grabbing ${task.urgency ? 'border-red-500/40 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : ''
                 }`}>
                 <div className="flex items-start justify-between gap-2 mb-1.5 md:mb-2 text-left">
-                    <h4 className="text-[9px] md:text-xs font-bold text-gray-100 line-clamp-2 leading-tight select-none">
-                        {task.title}
-                    </h4>
+                    <div className="flex justify-between items-start mb-2">
+                        <h3 className={`text-[10px] md:text-xs font-black uppercase leading-[1.1] tracking-tight ${task.completed ? 'line-through opacity-40' : 'text-white'
+                            }`}>
+                            {task.title}
+                        </h3>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingTask(task);
+                            }}
+                            className="p-1 hover:bg-white/10 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                            <Pencil size={10} className="text-gray-400" />
+                        </button>
+                    </div>
                     {task.urgency && <AlertCircle size={12} className="text-red-500 shrink-0 md:w-3.5 md:h-3.5" />}
                 </div>
 

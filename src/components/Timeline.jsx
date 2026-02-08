@@ -2,10 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useTaskStore } from '../store/taskStore';
 import { useShallow } from 'zustand/react/shallow';
-import { Clock, CheckCircle2, Circle, AlertCircle, Hash, Zap } from 'lucide-react';
+import { Clock, CheckCircle2, Circle, AlertCircle, Hash, Zap, Pencil } from 'lucide-react';
 
 const TimelineTask = ({ task, isFirst, isLast }) => {
-    const updateTask = useTaskStore(state => state.updateTask);
+    const { updateTask, setEditingTask } = useTaskStore();
 
     const parseLocalDate = (dateStr) => {
         if (!dateStr) return null;
@@ -81,6 +81,12 @@ const TimelineTask = ({ task, isFirst, isLast }) => {
                     </div>
 
                     <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setEditingTask(task)}
+                            className="p-2 hover:bg-white/10 rounded-xl text-gray-500 hover:text-white transition-all active:scale-90"
+                        >
+                            <Pencil size={14} md:size={16} />
+                        </button>
                         <button
                             onClick={() => updateTask(task.id, { completed: !task.completed })}
                             className={`px-4 py-2 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${task.completed

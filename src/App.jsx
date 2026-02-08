@@ -22,6 +22,7 @@ import Analytics from './components/Analytics';
 import LoginPage from './pages/LoginPage';
 import Mantra from './components/Mantra';
 import FilterBar from './components/FilterBar';
+import EditTaskModal from './components/EditTaskModal';
 import { useTaskStore } from './store/taskStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useAuthStore } from './store/authStore';
@@ -116,6 +117,7 @@ const App = () => {
 
     return (
         <div className="flex h-screen w-screen bg-transparent overflow-hidden text-white font-sans selection:bg-purple-500/30 relative">
+            {/* Modals */}
             <ChaosModal
                 isOpen={isChaosModalOpen}
                 onClose={() => setIsChaosModalOpen(false)}
@@ -125,6 +127,7 @@ const App = () => {
                 isOpen={isSettingsOpen}
                 onClose={() => setIsSettingsOpen(false)}
             />
+            <EditTaskModal />
 
             {/* Sidebar Overlay for Mobile */}
             <AnimatePresence>

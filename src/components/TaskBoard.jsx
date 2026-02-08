@@ -10,12 +10,12 @@ import {
     SlidersHorizontal,
     Tag,
     Trash2,
-    AlertTriangle
+    AlertTriangle,
+    Pencil
 } from 'lucide-react';
 
 const TaskItem = ({ task }) => {
-    const deleteTask = useTaskStore(state => state.deleteTask);
-    const updateTask = useTaskStore(state => state.updateTask);
+    const { updateTask, deleteTask, setEditingTask } = useTaskStore();
 
     return (
         <motion.div
@@ -69,6 +69,12 @@ const TaskItem = ({ task }) => {
                     }`}>
                     {task.impact > 70 ? 'ROI Alto' : 'Mantener'}
                 </div>
+                <button
+                    onClick={() => setEditingTask(task)}
+                    className="p-2 md:p-3 hover:bg-white/10 rounded-xl text-gray-500 hover:text-white transition-all active:scale-90"
+                >
+                    <Pencil size={16} md:size={18} />
+                </button>
                 <button
                     onClick={() => deleteTask(task.id)}
                     className="p-2 md:p-3 hover:bg-red-500/20 rounded-xl text-gray-500 hover:text-red-500 transition-all active:scale-90"

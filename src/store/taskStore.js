@@ -8,6 +8,9 @@ export const useTaskStore = create((set, get) => ({
         category: 'all', // 'all', 'own', 'client'
         client: 'all'    // 'all' or specific client name
     },
+    editingTask: null,
+
+    setEditingTask: (task) => set({ editingTask: task }),
 
     fetchTasks: async () => {
         set({ loading: true });
