@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useTaskStore } from '../store/taskStore';
+import { useShallow } from 'zustand/react/shallow';
 import { Clock, CheckCircle2, Circle, AlertCircle, Hash, Zap } from 'lucide-react';
 
 const TimelineTask = ({ task, isFirst, isLast }) => {
@@ -44,6 +45,11 @@ const TimelineTask = ({ task, isFirst, isLast }) => {
                             {task.target_date && (
                                 <span className="flex items-center gap-1 text-[9px] md:text-[11px] text-blue-400 font-black uppercase tracking-tighter">
                                     <Clock size={10} /> {new Date(task.target_date).toLocaleDateString('es-ES')}
+                                </span>
+                            )}
+                            {task.client_name && (
+                                <span className="flex items-center gap-1 text-[9px] md:text-[11px] text-emerald-400 font-black uppercase tracking-tighter bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                                    CLIENTE: {task.client_name}
                                 </span>
                             )}
                             {task.recurrence && task.recurrence !== 'none' && (
@@ -102,7 +108,14 @@ const TimelineTask = ({ task, isFirst, isLast }) => {
 };
 
 const Timeline = () => {
-    const tasks = useTaskStore(state => state.tasks);
+    const tasks = useTaskStore(useShallow(state => {
+        const { tasks, filters } = state;
+        return tasks.filter(task => {
+            const matchesCategory = filters.category === 'all' || task.category === filters.category;
+            const matchesClient = filters.client === 'all' || task.client_name === filters.client;
+            return matchesCategory && matchesClient;
+        });
+    }));
 
     // Sort tasks by created_at descending (latest first)
     const sortedTasks = [...tasks].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));

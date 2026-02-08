@@ -13,6 +13,7 @@ import {
 } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 import { useTaskStore } from '../store/taskStore';
+import { useShallow } from 'zustand/react/shallow';
 import { Zap, Target, TrendingUp, Activity } from 'lucide-react';
 
 ChartJS.register(
@@ -28,7 +29,14 @@ ChartJS.register(
 );
 
 const Analytics = () => {
-    const tasks = useTaskStore(state => state.tasks);
+    const tasks = useTaskStore(useShallow(state => {
+        const { tasks, filters } = state;
+        return tasks.filter(task => {
+            const matchesCategory = filters.category === 'all' || task.category === filters.category;
+            const matchesClient = filters.client === 'all' || task.client_name === filters.client;
+            return matchesCategory && matchesClient;
+        });
+    }));
 
     const completed = tasks.filter(t => t.completed).length;
     const pending = tasks.length - completed;

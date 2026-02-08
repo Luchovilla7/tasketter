@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTaskStore } from '../store/taskStore';
+import { useShallow } from 'zustand/react/shallow';
 import { Zap, AlertCircle, Clock, Hash, Move } from 'lucide-react';
 
 const TaskCard = ({ task, zoom, pan, canvasRef }) => {
@@ -11,28 +12,22 @@ const TaskCard = ({ task, zoom, pan, canvasRef }) => {
         if (!canvasRef.current || !cardRef.current) return;
 
         const rect = canvasRef.current.getBoundingClientRect();
-        const cardRect = cardRef.current.getBoundingClientRect();
 
-        // 1. Get the CENTER of the card in absolute screen pixels
-        // This makes the drop position independent of where the user grabbed the card
-        const centerX = cardRect.left + (cardRect.width / 2);
-        const centerY = cardRect.top + (cardRect.height / 2);
+        // 1. Position relative to container using info.point (more reliable screen coordinate)
+        const relX = info.point.x - rect.left;
+        const relY = info.point.y - rect.top;
 
-        // 2. Position relative to container
-        const relX = centerX - rect.left;
-        const relY = centerY - rect.top;
-
-        // 3. Adjust for pan and scale to get internal map pixels
+        // 2. Adjust for pan and scale to get internal map pixels
         const mapX = (relX - pan.x) / zoom;
         const mapY = (relY - pan.y) / zoom;
 
-        // 4. Convert to percentage of container
+        // 3. Convert to percentage of container
         const newX = (mapX / rect.width) * 100;
         const newY = 100 - ((mapY / rect.height) * 100);
 
-        // Use 1 decimal precision for sub-pixel accuracy in local UI
-        const clampedX = Math.max(0, Math.min(100, Math.round(newX * 10) / 10));
-        const clampedY = Math.max(0, Math.min(100, Math.round(newY * 10) / 10));
+        // 4. Use 2-decimal precision for extreme accuracy
+        const clampedX = Math.max(0, Math.min(100, Math.round(newX * 100) / 100));
+        const clampedY = Math.max(0, Math.min(100, Math.round(newY * 100) / 100));
 
         updateTask(task.id, { impact: clampedY, effort: clampedX });
     };
@@ -71,6 +66,11 @@ const TaskCard = ({ task, zoom, pan, canvasRef }) => {
                 </div>
 
                 <div className="flex flex-wrap gap-1 mt-auto pointer-events-none">
+                    {task.client_name && (
+                        <div className="flex items-center gap-1 px-1 md:px-1.5 py-0.5 rounded-md bg-blue-500/10 text-[8px] md:text-[10px] text-blue-400 truncate max-w-full">
+                            <span className="font-black">CLIENT:</span> {task.client_name}
+                        </div>
+                    )}
                     {task.duration && (
                         <div className="flex items-center gap-1 px-1 md:px-1.5 py-0.5 rounded-md bg-white/5 text-[8px] md:text-[10px] text-gray-400 whitespace-nowrap">
                             <Clock size={8} className="md:w-[10px]" />
@@ -94,7 +94,15 @@ const TaskCard = ({ task, zoom, pan, canvasRef }) => {
 };
 
 const ImpactMatrix = () => {
-    const tasks = useTaskStore(state => state.tasks);
+    const updateTask = useTaskStore(state => state.updateTask);
+    const tasks = useTaskStore(useShallow(state => {
+        const { tasks, filters } = state;
+        return tasks.filter(task => {
+            const matchesCategory = filters.category === 'all' || task.category === filters.category;
+            const matchesClient = filters.client === 'all' || task.client_name === filters.client;
+            return matchesCategory && matchesClient;
+        });
+    }));
     const [zoom, setZoom] = useState(1);
     const [pan, setPan] = useState({ x: 0, y: 0 });
     const [isPanning, setIsPanning] = useState(false);
@@ -120,7 +128,21 @@ const ImpactMatrix = () => {
         if (!isPanning) return;
         const dx = e.clientX - lastPos.current.x;
         const dy = e.clientY - lastPos.current.y;
-        setPan(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+
+        setPan(prev => {
+            const newX = prev.x + dx;
+            const newY = prev.y + dy;
+
+            // Limit pan so the user doesn't get totally lost
+            // Allow more freedom at lower zoom
+            const limitX = window.innerWidth * 0.8;
+            const limitY = window.innerHeight * 0.8;
+
+            return {
+                x: Math.max(-limitX, Math.min(limitX, newX)),
+                y: Math.max(-limitY, Math.min(limitY, newY))
+            };
+        });
         lastPos.current = { x: e.clientX, y: e.clientY };
     };
 
@@ -166,9 +188,12 @@ const ImpactMatrix = () => {
                     </div>
                     <button
                         onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
-                        className="p-2 hover:bg-white/5 rounded-lg border border-white/5 text-[10px] font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-all underline underline-offset-4"
+                        className="p-2 hover:bg-white/5 rounded-lg border border-white/5 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-purple-400 transition-all flex items-center gap-2"
                     >
-                        Resetear Vista
+                        <motion.div animate={{ rotate: pan.x !== 0 || pan.y !== 0 ? 180 : 0 }}>
+                            <Move size={12} />
+                        </motion.div>
+                        Resetear
                     </button>
                 </div>
             </div>
@@ -180,8 +205,50 @@ const ImpactMatrix = () => {
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
-                className={`flex-1 relative glass-panel overflow-hidden border-white/5 bg-black/40 min-h-[400px] cursor-${isPanning ? 'grabbing' : 'crosshair'}`}
+                className={`flex-1 relative glass-panel overflow-hidden border-white/5 bg-black/40 min-h-[450px] cursor-${isPanning ? 'grabbing' : 'crosshair'} transition-shadow duration-500 ${isPanning ? 'shadow-[inset_0_0_50px_rgba(168,85,247,0.1)]' : ''}`}
             >
+                {/* Quadrant Quick Nav (Floating) */}
+                <div className="absolute top-4 left-4 z-50 flex flex-col gap-2">
+                    <div className="flex gap-2">
+                        <button onClick={() => setPan({ x: 50, y: 50 })} className="w-8 h-8 rounded-lg bg-black/60 border border-white/10 flex items-center justify-center hover:border-purple-500/50 transition-colors group" title="Grandes Proyectos">
+                            <div className="w-2 h-2 rounded-sm border-2 border-purple-500 group-hover:bg-purple-500 transition-colors" />
+                        </button>
+                        <button onClick={() => setPan({ x: -250, y: 50 })} className="w-8 h-8 rounded-lg bg-black/60 border border-white/10 flex items-center justify-center hover:border-emerald-500/50 transition-colors group" title="Victorias Rápidas">
+                            <div className="w-2 h-2 rounded-sm border-2 border-emerald-500 group-hover:bg-emerald-500 transition-colors" />
+                        </button>
+                    </div>
+                    <div className="flex gap-2">
+                        <button onClick={() => setPan({ x: 50, y: -250 })} className="w-8 h-8 rounded-lg bg-black/60 border border-white/10 flex items-center justify-center hover:border-gray-500/50 transition-colors group" title="Tareas Ingratas">
+                            <div className="w-2 h-2 rounded-sm border-2 border-gray-500 group-hover:bg-gray-500 transition-colors" />
+                        </button>
+                        <button onClick={() => setPan({ x: -250, y: -250 })} className="w-8 h-8 rounded-lg bg-black/60 border border-white/10 flex items-center justify-center hover:border-blue-500/50 transition-colors group" title="Relleno">
+                            <div className="w-2 h-2 rounded-sm border-2 border-blue-500 group-hover:bg-blue-500 transition-colors" />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Radar (Mini-map) */}
+                <div className="absolute bottom-6 right-6 w-32 h-32 bg-black/80 rounded-2xl border border-white/10 p-2 z-50 pointer-events-none overflow-hidden backdrop-blur-md shadow-2xl border-purple-500/20">
+                    <div className="w-full h-full relative border border-white/5 rounded-lg opacity-40 bg-white/5">
+                        <div className="absolute top-1/2 left-0 w-full h-px bg-white/20" />
+                        <div className="absolute left-1/2 top-0 h-full w-px bg-white/20" />
+
+                        {/* Viewport Indicator */}
+                        <motion.div
+                            animate={{
+                                x: Math.max(0, Math.min(90, (-pan.x / (canvasRef.current?.offsetWidth || 1) / zoom) * 112 + 56 - (56 / zoom))),
+                                y: Math.max(0, Math.min(90, (-pan.y / (canvasRef.current?.offsetHeight || 1) / zoom) * 112 + 56 - (56 / zoom))),
+                                width: Math.min(112, 112 / zoom),
+                                height: Math.min(112, 112 / zoom),
+                                opacity: isPanning ? 1 : 0.6
+                            }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                            className="absolute border-2 border-purple-500 bg-purple-500/20 rounded-md"
+                            style={{ left: 0, top: 0 }}
+                        />
+                    </div>
+                    <p className="absolute bottom-1 left-0 w-full text-center text-[7px] font-black uppercase tracking-widest text-purple-400/60">Sistema de Radar</p>
+                </div>
                 {/* Viewport Transform Wrapper */}
                 <motion.div
                     style={{ transformOrigin: '0 0' }}

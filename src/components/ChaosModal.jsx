@@ -8,19 +8,25 @@ const ChaosModal = ({ isOpen, onClose }) => {
     const [text, setText] = useState('');
     const [targetDate, setTargetDate] = useState('');
     const [recurrence, setRecurrence] = useState('none');
+    const [category, setCategory] = useState('own');
+    const [clientName, setClientName] = useState('');
     const addBulkTasks = useTaskStore(state => state.addBulkTasks);
 
     const handleProcess = () => {
         const parsedTasks = parseChaosList(text);
-        const tasksWithSchedule = parsedTasks.map(task => ({
+        const tasksWithExtras = parsedTasks.map(task => ({
             ...task,
             target_date: targetDate || null,
-            recurrence: recurrence
+            recurrence: recurrence,
+            category: category,
+            client_name: category === 'client' ? clientName.trim() : null
         }));
-        addBulkTasks(tasksWithSchedule);
+        addBulkTasks(tasksWithExtras);
         setText('');
         setTargetDate('');
         setRecurrence('none');
+        setCategory('own');
+        setClientName('');
         onClose();
     };
 
@@ -83,6 +89,37 @@ const ChaosModal = ({ isOpen, onClose }) => {
                                     ))}
                                 </select>
                             </div>
+                            {/* New Category/Client Fields */}
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[10px] uppercase font-black tracking-widest text-gray-500">Tipo de Tarea</label>
+                                <select
+                                    value={category}
+                                    onChange={(e) => setCategory(e.target.value)}
+                                    className="bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-purple-500/50 transition-colors appearance-none"
+                                >
+                                    <option value="own" className="bg-gray-900">Propia (Interna)</option>
+                                    <option value="client" className="bg-gray-900">Para Cliente</option>
+                                </select>
+                            </div>
+                            <AnimatePresence>
+                                {category === 'client' && (
+                                    <motion.div
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -10 }}
+                                        className="flex flex-col gap-2"
+                                    >
+                                        <label className="text-[10px] uppercase font-black tracking-widest text-gray-500">Nombre del Cliente</label>
+                                        <input
+                                            type="text"
+                                            value={clientName}
+                                            onChange={(e) => setClientName(e.target.value)}
+                                            placeholder="Ej: LogoCorp, Nike, etc."
+                                            className="bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-purple-500/50 transition-colors"
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
 
                         <p className="text-gray-400 mb-4 text-xs md:text-sm leading-relaxed">

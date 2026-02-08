@@ -20,7 +20,10 @@ import Timeline from './components/Timeline';
 import CalendarView from './components/CalendarView';
 import Analytics from './components/Analytics';
 import LoginPage from './pages/LoginPage';
+import Mantra from './components/Mantra';
+import FilterBar from './components/FilterBar';
 import { useTaskStore } from './store/taskStore';
+import { useShallow } from 'zustand/react/shallow';
 import { useAuthStore } from './store/authStore';
 
 // Temporary Mock View for Timeline/Calendar
@@ -47,7 +50,18 @@ const MockView = ({ title }) => (
 
 const App = () => {
     const { user, loading, checkSession } = useAuthStore();
-    const { tasks, fetchTasks } = useTaskStore();
+    const fetchTasks = useTaskStore(state => state.fetchTasks);
+
+    // Select filtered tasks using a stable selector with useShallow
+    const filteredTasks = useTaskStore(useShallow(state => {
+        const { tasks, filters } = state;
+        return tasks.filter(task => {
+            const matchesCategory = filters.category === 'all' || task.category === filters.category;
+            const matchesClient = filters.client === 'all' || task.client_name === filters.client;
+            return matchesCategory && matchesClient;
+        });
+    }));
+
     const [activeTab, setActiveTab] = useState('matrix');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isChaosModalOpen, setIsChaosModalOpen] = useState(false);
@@ -160,6 +174,11 @@ const App = () => {
                             </button>
                         </div>
 
+                        {/* User Mantra Section */}
+                        <div className="px-6 mb-4">
+                            <Mantra />
+                        </div>
+
                         <nav className="flex-1 px-4 md:px-5 py-4 space-y-2 overflow-y-auto no-scrollbar">
                             {navItems.map((item) => (
                                 <button
@@ -239,9 +258,11 @@ const App = () => {
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 md:gap-5 mt-1 md:mt-2">
+                                <FilterBar />
+                                <div className="w-px h-3 md:h-4 bg-white/10 shrink-0" />
                                 <div className="text-[10px] md:text-xs text-purple-400 font-bold flex items-center gap-1.5 md:gap-2 leading-none">
                                     <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)] shrink-0" />
-                                    {tasks.length} Nodos
+                                    {filteredTasks.length} Nodos
                                 </div>
                                 <div className="w-px h-3 md:h-4 bg-white/10 shrink-0" />
                                 <p className="text-[10px] md:text-xs text-gray-500 font-medium truncate hidden sm:block">

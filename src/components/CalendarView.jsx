@@ -10,9 +10,18 @@ import {
     AlertCircle
 } from 'lucide-react';
 import { useTaskStore } from '../store/taskStore';
+import { useShallow } from 'zustand/react/shallow';
 
 const CalendarView = () => {
-    const tasks = useTaskStore(state => state.tasks);
+    // Select only filtered tasks with useShallow
+    const tasks = useTaskStore(useShallow(state => {
+        const { tasks, filters } = state;
+        return tasks.filter(task => {
+            const matchesCategory = filters.category === 'all' || task.category === filters.category;
+            const matchesClient = filters.client === 'all' || task.client_name === filters.client;
+            return matchesCategory && matchesClient;
+        });
+    }));
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(null);
 

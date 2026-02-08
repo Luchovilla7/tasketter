@@ -47,4 +47,18 @@ export const useAuthStore = create((set) => ({
             set({ session, user: session?.user || null, loading: false });
         });
     },
+
+    updateMantra: async (mantra) => {
+        const { data, error } = await supabase.auth.updateUser({
+            data: { mantra }
+        });
+
+        if (error) {
+            console.error('Error updating mantra:', error.message);
+            throw error;
+        }
+
+        set({ user: data.user });
+        return data.user;
+    },
 }));

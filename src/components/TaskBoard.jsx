@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTaskStore } from '../store/taskStore';
+import { useShallow } from 'zustand/react/shallow';
 import {
     CheckCircle2,
     Circle,
@@ -40,6 +41,11 @@ const TaskItem = ({ task }) => {
                     {task.title}
                 </h4>
                 <div className="flex flex-wrap items-center gap-3 md:gap-4">
+                    {task.client_name && (
+                        <span className="text-[9px] md:text-[10px] text-blue-400 font-black uppercase tracking-wider flex items-center gap-1.5 bg-blue-500/10 px-2 py-0.5 rounded-md">
+                            CLIENTE: {task.client_name}
+                        </span>
+                    )}
                     {task.duration && (
                         <span className="text-[9px] md:text-[10px] text-gray-500 font-bold uppercase flex items-center gap-1.5">
                             <Clock size={10} md:size={12} className="text-purple-400" /> {task.duration}m
@@ -75,7 +81,14 @@ const TaskItem = ({ task }) => {
 };
 
 const TaskBoard = () => {
-    const tasks = useTaskStore(state => state.tasks);
+    const tasks = useTaskStore(useShallow(state => {
+        const { tasks, filters } = state;
+        return tasks.filter(task => {
+            const matchesCategory = filters.category === 'all' || task.category === filters.category;
+            const matchesClient = filters.client === 'all' || task.client_name === filters.client;
+            return matchesCategory && matchesClient;
+        });
+    }));
     const [filter, setFilter] = useState('all');
     const [search, setSearch] = useState('');
 
@@ -103,8 +116,8 @@ const TaskBoard = () => {
                             key={item.id}
                             onClick={() => setFilter(item.id)}
                             className={`flex-1 lg:flex-none px-4 md:px-6 py-2.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${filter === item.id
-                                    ? 'bg-purple-600 text-white shadow-[0_10px_25px_rgba(147,51,234,0.3)] border border-white/20'
-                                    : 'text-gray-500 hover:text-white hover:bg-white/5'
+                                ? 'bg-purple-600 text-white shadow-[0_10px_25px_rgba(147,51,234,0.3)] border border-white/20'
+                                : 'text-gray-500 hover:text-white hover:bg-white/5'
                                 }`}
                         >
                             {item.label}

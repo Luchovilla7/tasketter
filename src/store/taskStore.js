@@ -4,6 +4,10 @@ import { supabase } from '../utils/supabaseClient';
 export const useTaskStore = create((set, get) => ({
     tasks: [],
     loading: false,
+    filters: {
+        category: 'all', // 'all', 'own', 'client'
+        client: 'all'    // 'all' or specific client name
+    },
 
     fetchTasks: async () => {
         set({ loading: true });
@@ -34,6 +38,8 @@ export const useTaskStore = create((set, get) => ({
             tags: [],
             target_date: null,
             recurrence: 'none',
+            category: 'own',
+            client_name: null
         };
 
         const { data, error } = await supabase
@@ -63,6 +69,8 @@ export const useTaskStore = create((set, get) => ({
             tags: t.tags || [],
             target_date: t.target_date || null,
             recurrence: t.recurrence || 'none',
+            category: t.category || 'own',
+            client_name: t.client_name || null
         }));
 
         const { data, error } = await supabase
@@ -76,6 +84,10 @@ export const useTaskStore = create((set, get) => ({
             set((state) => ({ tasks: [...data, ...state.tasks] }));
         }
     },
+
+    setFilters: (filters) => set((state) => ({
+        filters: { ...state.filters, ...filters }
+    })),
 
     updateTask: async (id, updates) => {
         const { error } = await supabase
