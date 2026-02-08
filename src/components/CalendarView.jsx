@@ -35,7 +35,37 @@ const CalendarView = () => {
 
     const getTasksForDay = (day) => {
         const date = new Date(year, month, day);
-        return tasks.filter(task => isSameDay(new Date(task.created_at), date));
+        const dayOfWeek = date.getDay(); // 0 is Sunday, 1 is Monday...
+        const dayOfMonth = date.getDate();
+
+        return tasks.filter(task => {
+            const taskDate = task.target_date ? new Date(task.target_date) : new Date(task.created_at);
+
+            // 1. Direct match (Scheduled for this specific day)
+            if (isSameDay(taskDate, date)) return true;
+
+            // 2. Recurrence Logic (Only if the task start date is before or equal to the calendar date)
+            const taskStart = new Date(taskDate.setHours(0, 0, 0, 0));
+            const currentCalDate = new Date(date.setHours(0, 0, 0, 0));
+
+            if (currentCalDate < taskStart) return false;
+
+            if (task.recurrence === 'daily') return true;
+
+            if (task.recurrence === 'weekdays') {
+                return dayOfWeek >= 1 && dayOfWeek <= 5;
+            }
+
+            if (task.recurrence === 'weekly') {
+                return dayOfWeek === taskDate.getDay();
+            }
+
+            if (task.recurrence === 'monthly') {
+                return dayOfMonth === taskDate.getDate();
+            }
+
+            return false;
+        });
     };
 
     const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));

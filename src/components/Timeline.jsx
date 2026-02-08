@@ -41,6 +41,21 @@ const TimelineTask = ({ task, isFirst, isLast }) => {
                             <span className="text-[10px] md:text-xs font-black text-gray-500 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded-md">
                                 {formatDate(task.created_at)}
                             </span>
+                            {task.target_date && (
+                                <span className="flex items-center gap-1 text-[9px] md:text-[11px] text-blue-400 font-black uppercase tracking-tighter">
+                                    <Clock size={10} /> {new Date(task.target_date).toLocaleDateString('es-ES')}
+                                </span>
+                            )}
+                            {task.recurrence && task.recurrence !== 'none' && (
+                                <span className="flex items-center gap-1 text-[9px] md:text-[11px] text-purple-400 font-black uppercase tracking-tighter bg-purple-500/10 px-1.5 py-0.5 rounded">
+                                    <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 4, ease: "linear" }}>
+                                        <Zap size={10} />
+                                    </motion.div>
+                                    {task.recurrence === 'daily' ? 'Diario' :
+                                        task.recurrence === 'weekdays' ? 'Lunes-Viernes' :
+                                            task.recurrence === 'weekly' ? 'Semanal' : 'Mensual'}
+                                </span>
+                            )}
                             {task.urgency && (
                                 <span className="flex items-center gap-1 text-[9px] md:text-[11px] text-red-400 font-black uppercase tracking-tighter">
                                     <AlertCircle size={10} /> Urgente
@@ -56,8 +71,8 @@ const TimelineTask = ({ task, isFirst, isLast }) => {
                         <button
                             onClick={() => updateTask(task.id, { completed: !task.completed })}
                             className={`px-4 py-2 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${task.completed
-                                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                                    : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 hover:text-white'
+                                ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                                : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 hover:text-white'
                                 }`}
                         >
                             {task.completed ? 'Completada' : 'Marcar Lista'}

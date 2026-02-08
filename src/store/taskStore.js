@@ -32,6 +32,8 @@ export const useTaskStore = create((set, get) => ({
             urgency: false,
             completed: false,
             tags: [],
+            target_date: null,
+            recurrence: 'none',
         };
 
         const { data, error } = await supabase
@@ -59,6 +61,8 @@ export const useTaskStore = create((set, get) => ({
             completed: t.completed || false,
             duration: t.duration || null,
             tags: t.tags || [],
+            target_date: t.target_date || null,
+            recurrence: t.recurrence || 'none',
         }));
 
         const { data, error } = await supabase

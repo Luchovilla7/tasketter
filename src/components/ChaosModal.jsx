@@ -6,14 +6,31 @@ import { useTaskStore } from '../store/taskStore';
 
 const ChaosModal = ({ isOpen, onClose }) => {
     const [text, setText] = useState('');
+    const [targetDate, setTargetDate] = useState('');
+    const [recurrence, setRecurrence] = useState('none');
     const addBulkTasks = useTaskStore(state => state.addBulkTasks);
 
     const handleProcess = () => {
         const parsedTasks = parseChaosList(text);
-        addBulkTasks(parsedTasks);
+        const tasksWithSchedule = parsedTasks.map(task => ({
+            ...task,
+            target_date: targetDate || null,
+            recurrence: recurrence
+        }));
+        addBulkTasks(tasksWithSchedule);
         setText('');
+        setTargetDate('');
+        setRecurrence('none');
         onClose();
     };
+
+    const recurrenceOptions = [
+        { id: 'none', label: 'Sin repetición' },
+        { id: 'daily', label: 'Diario' },
+        { id: 'weekdays', label: 'Lunes a Viernes' },
+        { id: 'weekly', label: 'Semanal' },
+        { id: 'monthly', label: 'Mensual' },
+    ];
 
     return (
         <AnimatePresence>
@@ -44,6 +61,30 @@ const ChaosModal = ({ isOpen, onClose }) => {
                             </button>
                         </div>
 
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[10px] uppercase font-black tracking-widest text-gray-500">Programar para</label>
+                                <input
+                                    type="date"
+                                    value={targetDate}
+                                    onChange={(e) => setTargetDate(e.target.value)}
+                                    className="bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-purple-500/50 transition-colors"
+                                />
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[10px] uppercase font-black tracking-widest text-gray-500">Recurrencia</label>
+                                <select
+                                    value={recurrence}
+                                    onChange={(e) => setRecurrence(e.target.value)}
+                                    className="bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-purple-500/50 transition-colors appearance-none"
+                                >
+                                    {recurrenceOptions.map(opt => (
+                                        <option key={opt.id} value={opt.id} className="bg-gray-900">{opt.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
                         <p className="text-gray-400 mb-4 text-xs md:text-sm leading-relaxed">
                             Pega tu lista caótica. Usa <span className="text-purple-400 font-mono font-bold">[urgente]</span>, <span className="text-blue-400 font-mono font-bold">(30m)</span>, o <span className="text-emerald-400 font-mono font-bold">#tags</span> para organizar automáticamente.
                         </p>
@@ -53,7 +94,7 @@ const ChaosModal = ({ isOpen, onClose }) => {
                             value={text}
                             onChange={(e) => setText(e.target.value)}
                             placeholder="Ej: Refactorizar módulo auth (2h) [urgente] #dev&#10;Corregir bug en producción #bug !i:90 !e:10&#10;Llamar cliente sobre propuesta (15m)"
-                            className="w-full h-48 md:h-64 bg-black/40 border border-white/10 rounded-xl p-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500/50 transition-colors resize-none mb-6 font-mono text-xs md:text-sm leading-relaxed"
+                            className="w-full h-40 md:h-48 bg-black/40 border border-white/10 rounded-xl p-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500/50 transition-colors resize-none mb-6 font-mono text-xs md:text-sm leading-relaxed"
                         />
 
                         <div className="flex flex-col-reverse md:flex-row justify-end gap-3">
